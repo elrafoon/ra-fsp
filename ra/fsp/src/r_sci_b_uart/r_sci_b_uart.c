@@ -1618,6 +1618,12 @@ void sci_b_uart_rxi_isr (void)
 
         uint32_t data;
  #if SCI_B_UART_CFG_FIFO_SUPPORT
+        /* signal to callback fifo read began */
+        if (NULL != p_ctrl->p_callback)
+        {
+            r_sci_b_uart_call_callback(p_ctrl, 0U, UART_EVENT_RX_FIFO_BEGIN);
+        }
+
         do
         {
             if ((p_ctrl->fifo_depth > 0U))
@@ -1684,6 +1690,11 @@ void sci_b_uart_rxi_isr (void)
             p_ctrl->p_reg->CFCLR |= SCI_B_UART_CFCLR_RDRFC_MASK;
         }
 
+        /* signal to callback fifo read finished */
+        if (NULL != p_ctrl->p_callback)
+        {
+            r_sci_b_uart_call_callback(p_ctrl, 0U, UART_EVENT_RX_FIFO_END);
+        }
  #else
         }
  #endif
