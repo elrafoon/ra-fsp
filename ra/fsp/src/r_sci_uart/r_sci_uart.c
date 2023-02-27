@@ -1859,16 +1859,34 @@ void sci_uart_tei_isr (void)
     /* Recover ISR context saved in open. */
     sci_uart_instance_ctrl_t * p_ctrl = (sci_uart_instance_ctrl_t *) R_FSP_IsrContextGet(irq);
 
-    /* Receiving TEI(transmit end interrupt) means the completion of transmission, so call callback function here. */
-    p_ctrl->p_reg->SCR &= (uint8_t) ~(SCI_SCR_TIE_MASK | SCI_SCR_TEIE_MASK);
+    int tend;
 
-    /* Negate driver enable if RS-485 mode is enabled. */
-    r_sci_negate_de_pin(p_ctrl);
+#if SCI_UART_CFG_FIFO_SUPPORT
+    tend = (p_ctrl->fifo_depth > 0U) ? p_ctrl->p_reg->SSR_FIFO_b.TEND : p_ctrl->p_reg->SSR_b.TEND;
+#else
+    tend = p_ctrl->p_reg->SSR_b.TEND;
+#endif
 
-    /* If a callback was provided, call it with the argument */
-    if (NULL != p_ctrl->p_callback)
-    {
-        r_sci_uart_call_callback(p_ctrl, 0U, UART_EVENT_TX_COMPLETE);
+    /*
+     * re-evaluate TEND flag
+     *
+     * If user code started next transmission in TXI ISR callback, TEI could have been set by hardware
+     * during TXI ISR, just before next character was written to TDR/FTDR registers, and this ISR was
+     * triggered in NVIC.
+     * If that's the case, just clear the flag and do nothing, because transmission is in progress
+     */
+    if(tend) {
+        /* Receiving TEI(transmit end interrupt) means the completion of transmission, so call callback function here. */
+        p_ctrl->p_reg->SCR &= (uint8_t) ~(SCI_SCR_TIE_MASK | SCI_SCR_TEIE_MASK);
+
+        /* Negate driver enable if RS-485 mode is enabled. */
+        r_sci_negate_de_pin(p_ctrl);
+
+        /* If a callback was provided, call it with the argument */
+        if (NULL != p_ctrl->p_callback)
+        {
+            r_sci_uart_call_callback(p_ctrl, 0U, UART_EVENT_TX_COMPLETE);
+        }
     }
 
     /* Clear pending IRQ to make sure it doesn't fire again after exiting */
