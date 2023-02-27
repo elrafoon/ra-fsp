@@ -72,6 +72,8 @@ typedef enum e_sf_event
     UART_EVENT_ERR_OVERFLOW  = (1UL << 5), ///< FIFO Overflow error event
     UART_EVENT_BREAK_DETECT  = (1UL << 6), ///< Break detect error event
     UART_EVENT_TX_DATA_EMPTY = (1UL << 7), ///< Last byte is transmitting, ready for more data
+    UART_EVENT_RX_FIFO_BEGIN = (1UL << 8), ///< Receive fifo read began
+    UART_EVENT_RX_FIFO_END   = (1UL << 9), ///< Receive fifo read finish, fifo empty
 } uart_event_t;
 
 /** UART Data bit length definition */
