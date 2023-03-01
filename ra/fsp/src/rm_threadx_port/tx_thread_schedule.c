@@ -317,15 +317,19 @@ TX_PORT_NAKED_FUNCTION VOID PendSV_Handler (VOID)
         ".syntax unified                     \n"
 #endif
 
-#ifdef TX_ENABLE_EXECUTION_CHANGE_NOTIFY
+#if defined(TX_ENABLE_EXECUTION_CHANGE_NOTIFY) || defined(TX_ENABLE_USER_EXECUTION_CHANGE_NOTIFY)
 
         /* Call the thread exit function to indicate the thread is no longer executing.  */
 
         // _tx_execution_thread_exit();
         "CPSID   i                           \n" // Disable interrupts
         "PUSH    {r0, LR}                    \n" // Save LR since it has not been stored yet, and r0 to maintain double word stack aligment
+#ifdef TX_ENABLE_EXECUTION_CHANGE_NOTIFY
         "BL      _tx_execution_thread_exit   \n" // Call the thread exit function
-
+#endif
+#ifdef TX_ENABLE_USER_EXECUTION_CHANGE_NOTIFY
+        "BL      _tx_user_execution_thread_exit   \n" // Call the user thread exit function
+#endif
         /* r0-r3 are undefined after branches. */
         "POP     {r0, LR}                    \n" // Restore r0 and LR
         "CPSIE   i                           \n" // Enable interrupts
@@ -494,13 +498,18 @@ TX_PORT_NAKED_FUNCTION VOID PendSV_Handler (VOID)
         "]                                   \n" // Pickup thread's current time-slice
         "STR r0, [r4]                        \n" // Setup global time-slice
 
-#ifdef TX_ENABLE_EXECUTION_CHANGE_NOTIFY
+#if defined(TX_ENABLE_EXECUTION_CHANGE_NOTIFY) || defined(TX_ENABLE_USER_EXECUTION_CHANGE_NOTIFY)
 
         /* Call the thread entry function to indicate the thread is executing.  */
 
         // _tx_execution_thread_enter();
         "CPSID   i                           \n" // Disable interrupts
+#ifdef TX_ENABLE_EXECUTION_CHANGE_NOTIFY
         "BL  _tx_execution_thread_enter      \n" // Call the thread enter function
+#endif
+#ifdef TX_ENABLE_USER_EXECUTION_CHANGE_NOTIFY
+        "BL  _tx_user_execution_thread_enter      \n" // Call the user thread enter function
+#endif
         "CPSIE   i                           \n" // Enable interrupts
 
         /* r0-r3 are undefined after branches. */
