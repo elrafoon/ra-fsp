@@ -147,7 +147,7 @@ static UINT gx_sw_8bpp_glyph_1bit_draw_get_valid_bytes(GX_RECTANGLE * draw_area,
                                                        UINT         * p_pixel_in_last_byte,
                                                        GX_UBYTE     * p_init_mask);
 
-static VOID gx_dave2d_copy_visible_to_working_8bpp(GX_CANVAS * canvas, GX_RECTANGLE * copy);
+static VOID gx_dave2d_copy_visible_to_working_8bpp(GX_CANVAS * canvas, GX_RECTANGLE * copy, GX_UBYTE * source);
 static VOID gx_dave2d_rotate_canvas_to_working_8bpp(GX_CANVAS * canvas, GX_RECTANGLE * copy, INT rotation_angle);
 
 #endif
@@ -1221,7 +1221,11 @@ VOID _gx_dave2d_buffer_toggle_8bpp (GX_CANVAS * canvas, GX_RECTANGLE * dirty)
         if (canvas->gx_canvas_memory == (GX_COLOR *) working_frame)
         {
             /* Copies our canvas to the back buffer */
-            gx_dave2d_copy_visible_to_working_8bpp(canvas, &Copy);
+            gx_dave2d_copy_visible_to_working_8bpp(canvas, &Copy, visible_frame);
+        }
+        else if(rotation_angle == 0)
+        {
+            gx_dave2d_copy_visible_to_working_8bpp(canvas, &Copy, (GX_UBYTE *)canvas->gx_canvas_memory);
         }
         else
         {
@@ -1430,7 +1434,7 @@ static VOID gx_dave2d_rotate_canvas_to_working_8bpp (GX_CANVAS * canvas, GX_RECT
  * @param   canvas[in]         Pointer to a GUIX canvas
  * @param   copy[in]           Pointer to a rectangle area to be copied
  **********************************************************************************************************************/
-static VOID gx_dave2d_copy_visible_to_working_8bpp (GX_CANVAS * canvas, GX_RECTANGLE * copy)
+static VOID gx_dave2d_copy_visible_to_working_8bpp (GX_CANVAS * canvas, GX_RECTANGLE * copy, GX_UBYTE * source)
 {
     GX_RECTANGLE display_size;
     GX_RECTANGLE copy_clip;
@@ -1465,7 +1469,7 @@ static VOID gx_dave2d_copy_visible_to_working_8bpp (GX_CANVAS * canvas, GX_RECTA
         return;
     }
 
-    pGetRow = (ULONG *) visible_frame;
+    pGetRow = (ULONG *) source;
     pPutRow = (ULONG *) working_frame;
 
     CHECK_DAVE_STATUS(d2_setalphablendmode(dave, d2_bm_one, d2_bm_zero))
