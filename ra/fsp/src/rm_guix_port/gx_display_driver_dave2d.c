@@ -290,7 +290,14 @@ static VOID gx_dave2d_glyph_1bit_draw(GX_DRAW_CONTEXT * context,
                                       d2_u32            mode);
 static VOID gx_dave2d_copy_visible_to_working(GX_CANVAS * canvas, GX_RECTANGLE * copy);
 static VOID gx_dave2d_rotate_canvas_to_working(GX_CANVAS * canvas, GX_RECTANGLE * copy, INT rotation_angle);
-
+static VOID     gx_dave2d_rotate_canvas_to_working_param_set_0degree (d2_rotation_param_t * p_param,
+                                                                                            GX_CANVAS * p_canvas);
+static VOID     gx_dave2d_rotate_canvas_to_working_param_set_90degree (d2_rotation_param_t * p_param,
+                                                                        GX_DISPLAY *p_display, GX_CANVAS * p_canvas);
+static VOID     gx_dave2d_rotate_canvas_to_working_param_set_180degree (d2_rotation_param_t * p_param,
+                                                                        GX_DISPLAY *p_display, GX_CANVAS * p_canvas);
+static VOID     gx_dave2d_rotate_canvas_to_working_param_set_270degree (d2_rotation_param_t * p_param,
+                                                                        GX_DISPLAY *p_display, GX_CANVAS * p_canvas);
 static VOID gx_dave2d_rotate_canvas_to_working_image_draw(d2_device           * p_dave,
                                                           d2_rotation_param_t * p_param,
                                                           d2_u32                mode,
@@ -3574,61 +3581,169 @@ static VOID gx_dave2d_copy_visible_to_working (GX_CANVAS * canvas, GX_RECTANGLE 
  * @param[in]     p_canvas           Pointer to a GUIX canvas
  **********************************************************************************************************************/
 void gx_dave2d_rotate_canvas_to_working_param_set (d2_rotation_param_t * p_param,
-                                                   GX_DISPLAY          * p_display,
-                                                   GX_CANVAS           * p_canvas)
+                                                                       GX_DISPLAY *p_display, GX_CANVAS * p_canvas)
 {
-    if (p_param->angle == GX_SCREEN_ROTATION_FLIP)
+    if (p_param->angle == 0)
     {
-        INT      actual_video_width    = 0;
-        INT      actual_video_height   = 0;
-        GX_VALUE clipped_display_width = p_display->gx_display_width;
-
-        rm_guix_port_display_actual_size_get(p_display->gx_display_handle, &actual_video_width, &actual_video_height);
-        if (p_param->copy_width > actual_video_width)
-        {
-            p_param->copy_width = actual_video_width;
-        }
-
-        if ((INT) p_param->copy_clip.gx_rectangle_right > actual_video_width)
-        {
-            p_param->copy_clip.gx_rectangle_right = (GX_VALUE) actual_video_width;
-        }
-
-        if ((INT) clipped_display_width > actual_video_width)
-        {
-            clipped_display_width = (GX_VALUE) actual_video_width;
-        }
-
-        p_param->xmin = (d2_border) (clipped_display_width - p_param->copy_clip.gx_rectangle_right - 1);
-        p_param->xmax = (d2_border) (clipped_display_width - p_param->copy_clip.gx_rectangle_left - 1);
-        p_param->ymin =
-            (d2_border) (p_display->gx_display_height - p_param->copy_clip.gx_rectangle_bottom - 1);
-        p_param->ymax =
-            (d2_border) (p_display->gx_display_height - p_param->copy_clip.gx_rectangle_top - 1);
-        p_param->x_texture_zero = (d2_point) (clipped_display_width - p_param->copy_clip.gx_rectangle_left - 1);
-        p_param->y_texture_zero =
-            (d2_point) (p_display->gx_display_height - p_param->copy_clip.gx_rectangle_top - 1);
-        p_param->dxu = (d2_s32) (-D2_FIX16(1U));
-        p_param->dyv = (d2_s32) (-D2_FIX16(1U));
+        gx_dave2d_rotate_canvas_to_working_param_set_0degree (p_param, p_canvas);
     }
-    else
+    else if (p_param->angle == 90)
     {
-        p_param->xmin           = (d2_border) (p_param->copy_clip.gx_rectangle_left);
-        p_param->xmax           = (d2_border) (p_param->copy_clip.gx_rectangle_right);
-        p_param->ymin           = (d2_border) (p_param->copy_clip.gx_rectangle_top);
-        p_param->ymax           = (d2_border) (p_param->copy_clip.gx_rectangle_bottom);
-        p_param->x_texture_zero = (d2_point) (p_param->copy_clip.gx_rectangle_left);
-        p_param->y_texture_zero = (d2_point) (p_param->copy_clip.gx_rectangle_top);
-        p_param->dxu            = (d2_s32) (D2_FIX16(1U));
-        p_param->dyv            = (d2_s32) (D2_FIX16(1U));
+        gx_dave2d_rotate_canvas_to_working_param_set_90degree (p_param, p_display, p_canvas);
     }
+    else if (p_param->angle == 180)
+    {
+        gx_dave2d_rotate_canvas_to_working_param_set_180degree (p_param, p_display, p_canvas);
+    }
+    else /* angle = 270 */
+    {
+        gx_dave2d_rotate_canvas_to_working_param_set_270degree (p_param, p_display, p_canvas);
+    }
+}
 
-    p_param->dxv                 = 0;
-    p_param->dyu                 = 0;
+/*******************************************************************************************************************//**
+ * @brief  GUIX display driver for Synergy, D/AVE 2D draw function sub routine to set the screen rotation parameters
+ * for rotating 0 degree (no rotation).
+ * This function is called by gx_dave2d_rotate_canvas_to_working_param_set().
+ * @param[in]     p_param            Pointer to a rectangle area to be copied
+ * @param[in]     p_display          Pointer to the GUIX display
+ * @param[in]     p_canvas           Pointer to a GUIX canvas
+ **********************************************************************************************************************/
+static void gx_dave2d_rotate_canvas_to_working_param_set_0degree (d2_rotation_param_t * p_param, GX_CANVAS * p_canvas)
+{
+    p_param->xmin = (d2_border)(p_param->copy_clip.gx_rectangle_left);
+    p_param->xmax = (d2_border)(p_param->copy_clip.gx_rectangle_right);
+    p_param->ymin = (d2_border)(p_param->copy_clip.gx_rectangle_top);
+    p_param->ymax = (d2_border)(p_param->copy_clip.gx_rectangle_bottom);
+    p_param->x_texture_zero = (d2_point)(p_param->copy_clip.gx_rectangle_left);
+    p_param->y_texture_zero = (d2_point)(p_param->copy_clip.gx_rectangle_top);
+    p_param->dxu  = (d2_s32)(D2_FIX16(1U));
+    p_param->dxv  = 0;
+    p_param->dyu  = 0;
+    p_param->dyv  = (d2_s32)(D2_FIX16(1U));
     p_param->copy_width_rotated  = p_param->copy_width;
     p_param->copy_height_rotated = p_param->copy_height;
-    p_param->x_resolution        = p_canvas->gx_canvas_x_resolution;
-    p_param->y_resolution        = p_canvas->gx_canvas_y_resolution;
+    p_param->x_resolution   = p_canvas -> gx_canvas_x_resolution;
+    p_param->y_resolution   = p_canvas -> gx_canvas_y_resolution;
+}
+
+/*******************************************************************************************************************//**
+ * @brief  GUIX display driver for Synergy, D/AVE 2D draw function sub routine to set the screen rotation parameters
+ * for rotating 90 degree.
+ * This function is called by gx_dave2d_rotate_canvas_to_working_param_set().
+ * @param[in]     p_param            Pointer to a rectangle area to be copied
+ * @param[in]     p_display          Pointer to the GUIX display
+ * @param[in]     p_canvas           Pointer to a GUIX canvas
+ **********************************************************************************************************************/
+static void gx_dave2d_rotate_canvas_to_working_param_set_90degree (d2_rotation_param_t * p_param,
+                                                                        GX_DISPLAY *p_display, GX_CANVAS * p_canvas)
+{
+    INT         actual_video_width;
+    INT         actual_video_height;
+    GX_VALUE    clipped_display_height = p_display->gx_display_height;
+
+    rm_guix_port_display_actual_size_get(p_display->gx_display_handle, &actual_video_width, &actual_video_height);
+    if (p_param->copy_height > actual_video_width)
+    {
+        p_param->copy_height = actual_video_width;
+    }
+    if ((INT)p_param->copy_clip.gx_rectangle_bottom > actual_video_width)
+    {
+        p_param->copy_clip.gx_rectangle_bottom = (GX_VALUE)actual_video_width;
+    }
+
+    if ((INT)clipped_display_height > actual_video_width)
+    {
+        clipped_display_height = (GX_VALUE)actual_video_width;
+    }
+
+    p_param->xmin = (d2_border)(clipped_display_height - p_param->copy_clip.gx_rectangle_bottom - 1);
+    p_param->xmax = (d2_border)(clipped_display_height - p_param->copy_clip.gx_rectangle_top - 1);
+    p_param->ymin = (d2_border)(p_param->copy_clip.gx_rectangle_left);
+    p_param->ymax = (d2_border)(p_param->copy_clip.gx_rectangle_right);
+    p_param->x_texture_zero = (d2_point)(clipped_display_height - p_param->copy_clip.gx_rectangle_top -1);
+    p_param->y_texture_zero = (d2_point)(p_param->copy_clip.gx_rectangle_left);
+    p_param->dxu  = 0;
+    p_param->dxv  = (d2_s32)(D2_FIX16(1U));
+    p_param->dyu  = (d2_s32)(-D2_FIX16(1U));
+    p_param->dyv  = 0;
+    p_param->copy_width_rotated  = p_param->copy_height;
+    p_param->copy_height_rotated = p_param->copy_width;
+    p_param->x_resolution   = p_canvas -> gx_canvas_y_resolution;
+    p_param->y_resolution   = p_canvas -> gx_canvas_x_resolution;
+}
+
+/*******************************************************************************************************************//**
+ * @brief  GUIX display driver for Synergy, D/AVE 2D draw function sub routine to set the screen rotation parameters
+ * for rotating 180 degree.
+ * This function is called by gx_dave2d_rotate_canvas_to_working_param_set().
+ * @param[in]     p_param            Pointer to a rectangle area to be copied
+ * @param[in]     p_display          Pointer to the GUIX display
+ * @param[in]     p_canvas           Pointer to a GUIX canvas
+ **********************************************************************************************************************/
+static void gx_dave2d_rotate_canvas_to_working_param_set_180degree (d2_rotation_param_t * p_param,
+                                                                        GX_DISPLAY *p_display, GX_CANVAS * p_canvas)
+{
+    INT         actual_video_width;
+    INT         actual_video_height;
+    GX_VALUE    clipped_display_width = p_display->gx_display_width;
+
+    rm_guix_port_display_actual_size_get(p_display->gx_display_handle, &actual_video_width, &actual_video_height);
+    if (p_param->copy_width > actual_video_width)
+    {
+        p_param->copy_width = actual_video_width;
+    }
+    if ((INT)p_param->copy_clip.gx_rectangle_right > actual_video_width)
+    {
+        p_param->copy_clip.gx_rectangle_right = (GX_VALUE)actual_video_width;
+    }
+
+    if ((INT)clipped_display_width > actual_video_width)
+    {
+        clipped_display_width = (GX_VALUE)actual_video_width;
+    }
+
+    p_param->xmin = (d2_border)(clipped_display_width - p_param->copy_clip.gx_rectangle_right - 1);
+    p_param->xmax = (d2_border)(clipped_display_width - p_param->copy_clip.gx_rectangle_left - 1);
+    p_param->ymin = (d2_border)(p_display->gx_display_height - p_param->copy_clip.gx_rectangle_bottom -1);
+    p_param->ymax = (d2_border)(p_display->gx_display_height - p_param->copy_clip.gx_rectangle_top - 1);
+    p_param->x_texture_zero = (d2_point)(clipped_display_width - p_param->copy_clip.gx_rectangle_left -1);
+    p_param->y_texture_zero = (d2_point)(p_display->gx_display_height - p_param->copy_clip.gx_rectangle_top - 1);
+    p_param->dxu  = (d2_s32)(-D2_FIX16(1U));
+    p_param->dxv  = 0;
+    p_param->dyu  = 0;
+    p_param->dyv  = (d2_s32)(-D2_FIX16(1U));
+    p_param->copy_width_rotated  = p_param->copy_width;
+    p_param->copy_height_rotated = p_param->copy_height;
+    p_param->x_resolution   = p_canvas -> gx_canvas_x_resolution;
+    p_param->y_resolution   = p_canvas -> gx_canvas_y_resolution;
+}
+
+/*******************************************************************************************************************//**
+ * @brief  GUIX display driver for Synergy, D/AVE 2D draw function sub routine to set the screen rotation parameters
+ * for rotating 270 degree.
+ * This function is called by gx_dave2d_rotate_canvas_to_working_param_set().
+ * @param[in]     p_param            Pointer to a rectangle area to be copied
+ * @param[in]     p_display          Pointer to the GUIX display
+ * @param[in]     p_canvas           Pointer to a GUIX canvas
+ **********************************************************************************************************************/
+static void gx_dave2d_rotate_canvas_to_working_param_set_270degree (d2_rotation_param_t * p_param,
+                                                                        GX_DISPLAY *p_display, GX_CANVAS * p_canvas)
+{
+    p_param->xmin = (d2_border)(p_param->copy_clip.gx_rectangle_top);
+    p_param->xmax = (d2_border)(p_param->copy_clip.gx_rectangle_bottom);
+    p_param->ymin = (d2_border)(p_display->gx_display_width - p_param->copy_clip.gx_rectangle_right - 1);
+    p_param->ymax = (d2_border)(p_display->gx_display_width - p_param->copy_clip.gx_rectangle_left - 1);
+    p_param->x_texture_zero = (d2_point)(p_param->copy_clip.gx_rectangle_top);
+    p_param->y_texture_zero = (d2_point)(p_display->gx_display_width - p_param->copy_clip.gx_rectangle_left -1);
+    p_param->dxu  = 0;
+    p_param->dxv  = (d2_s32)(-D2_FIX16(1U));
+    p_param->dyu  = (d2_s32)(D2_FIX16(1U));
+    p_param->dyv  = 0;
+    p_param->copy_width_rotated  = p_param->copy_height;
+    p_param->copy_height_rotated = p_param->copy_width;
+    p_param->x_resolution   = p_canvas -> gx_canvas_y_resolution;
+    p_param->y_resolution   = p_canvas -> gx_canvas_x_resolution;
 }
 
 /*******************************************************************************************************************//**
