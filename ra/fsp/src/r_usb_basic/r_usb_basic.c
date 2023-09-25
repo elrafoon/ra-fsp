@@ -34,27 +34,27 @@
 #include "src/hw/inc/r_usb_reg_access.h"
 
 #if (BSP_CFG_RTOS == 1)
- #include "../../../microsoft/azure-rtos/usbx/common/core/inc/ux_api.h"
- #include "../../../microsoft/azure-rtos/usbx/common/core/inc/ux_system.h"
+ #include "usbx/common/core/inc/ux_api.h"
+ #include "usbx/common/core/inc/ux_system.h"
  #if defined(USB_CFG_HCDC_USE)
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_cdc_acm.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_cdc_acm.h"
  #endif                                /* defined(USB_CFG_HCDC_USE) */
  #if defined(USB_CFG_HMSC_USE)
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_storage.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_storage.h"
  #endif                                /* defined(USB_CFG_HMSC_USE) */
  #if defined(USB_CFG_HHID_USE)
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_hid.h"
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_hid_keyboard.h"
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_hid_mouse.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_hid.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_hid_keyboard.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_hid_mouse.h"
  #endif                                /* defined(USB_CFG_HHID_USE) */
  #if defined(USB_CFG_HPRN_USE)
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_printer.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_printer.h"
  #endif                                /* defined(USB_CFG_HPRN_USE) */
  #if defined(USB_CFG_HUVC_USE)
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_video.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_video.h"
  #endif                                /* defined(USB_CFG_HUVC_USE) */
  #if ((USB_CFG_MODE & USB_CFG_HOST) == USB_CFG_HOST)
-  #include "../../../microsoft/azure-rtos/usbx/common/usbx_host_classes/inc/ux_host_class_hub.h"
+  #include "usbx/common/usbx_host_classes/inc/ux_host_class_hub.h"
  #endif /* ((USB_CFG_MODE & USB_CFG_HOST) == USB_CFG_HOST) */
 #endif                                 /* #if (BSP_CFG_RTOS == 1) */
 

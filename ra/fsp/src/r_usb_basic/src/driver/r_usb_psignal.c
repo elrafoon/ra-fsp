@@ -32,10 +32,10 @@
 #include "../hw/inc/r_usb_reg_access.h"
 
 #if (BSP_CFG_RTOS == 1)
- #include "../../../../../microsoft/azure-rtos/usbx/common/core/inc/ux_api.h"
- #include "../../../../../microsoft/azure-rtos/usbx/common/core/inc/ux_system.h"
- #include "../../../../../microsoft/azure-rtos/usbx/common/core/inc/ux_utility.h"
- #include "../../../../../microsoft/azure-rtos/usbx/common/core/inc/ux_device_stack.h"
+ #include "usbx/common/core/inc/ux_api.h"
+ #include "usbx/common/core/inc/ux_system.h"
+ #include "usbx/common/core/inc/ux_utility.h"
+ #include "usbx/common/core/inc/ux_device_stack.h"
 #endif                                 /* #if (BSP_CFG_RTOS == 1) */
 
 #if ((USB_CFG_MODE & USB_CFG_PERI) == USB_CFG_PERI)

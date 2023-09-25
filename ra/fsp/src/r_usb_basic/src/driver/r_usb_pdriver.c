@@ -33,7 +33,7 @@
 #include "../hw/inc/r_usb_reg_access.h"
 
 #if (BSP_CFG_RTOS == 1)
- #include "../../../../../microsoft/azure-rtos/usbx/common/core/inc/ux_api.h"
+ #include "usbx/common/core/inc/ux_api.h"
  #if defined(USB_CFG_OTG_USE)
   #if defined(USB_CFG_HCDC_USE)
    #include "ux_host_class_cdc_acm.h"
